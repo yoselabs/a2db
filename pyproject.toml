@@ -120,6 +120,9 @@ max-returns = 6
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-v --strict-markers --cov --cov-report=term:skip-covered --cov-report=xml --cov-fail-under=80"
+env = [
+    "A2DB_TEST=1",
+]
 
 [tool.coverage.run]
 source = ["src/a2db"]
@@ -144,4 +147,5 @@ dev = [
     "diff-cover>=9",
     "ruff>=0.9",
     "ty>=0.0.25",
+    "pytest-env>=1.6.0",
 ]
