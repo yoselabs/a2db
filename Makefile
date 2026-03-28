@@ -1,6 +1,6 @@
-.PHONY: lint fix test check build bootstrap coverage-diff
+.PHONY: lint fix test check build bootstrap coverage-diff security
 
-check: lint test
+check: lint test security
 
 lint:
 	@agent-harness lint
@@ -19,6 +19,9 @@ bootstrap:
 	@command -v agent-harness >/dev/null 2>&1 || (echo "Install agent-harness: uv tool install agent-harness" && exit 1)
 	@command -v prek >/dev/null 2>&1 && prek install || (command -v pre-commit >/dev/null 2>&1 && pre-commit install || echo "Install prek: brew install prek")
 	@echo "Dev environment ready. Run 'make lint' to verify."
+
+security:
+	@agent-harness security-audit
 
 build:
 	uv build

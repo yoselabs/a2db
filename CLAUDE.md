@@ -15,13 +15,17 @@ CLI and MCP server for AI agents to query databases. Two frontends (CLI + MCP), 
 
 ## Dev Commands
 
-- Run tests: `make test`
+- Full gate: `make check` (lint + test + security)
+- Run tests: `make test` (includes coverage, fails under 90%)
 - Lint: `make lint` or `agent-harness lint` (check only, never modifies files — safe to run anytime)
 - Fix: `make fix` or `agent-harness fix` (auto-fix, then runs lint to verify)
-- Full gate: `make check` (lint + test)
-- Audit: `agent-harness audit` (checks project hygiene)
+- Coverage diff: `make coverage-diff` (changed lines must be 95%+ covered)
+- Security: `agent-harness security-audit` (deps + secrets)
+- Config check: `agent-harness init` (checks project hygiene)
 - Build: `make build`
 - Bootstrap: `make bootstrap` (installs deps, requires `agent-harness` CLI)
+
+Pre-commit hooks run `fix` then `lint` automatically on every commit. Never truncate lint or test output — read the full error.
 
 ## Never
 

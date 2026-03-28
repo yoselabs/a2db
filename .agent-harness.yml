@@ -2,4 +2,4 @@
 stacks: [python]
 
 python:
-  coverage_threshold: 80
+  coverage_threshold: 90

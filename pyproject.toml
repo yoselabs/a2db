@@ -119,7 +119,7 @@ max-returns = 6
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-v --strict-markers --cov --cov-report=term:skip-covered --cov-report=xml --cov-fail-under=80"
+addopts = "-v --strict-markers --cov --cov-report=term:skip-covered --cov-report=xml --cov-fail-under=90"
 env = [
     "A2DB_TEST=1",
 ]

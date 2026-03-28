@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 
+from a2db.config import DEFAULT_CONFIG_DIR
 from a2db.connections import ConnectionStore
 
 
@@ -85,3 +86,9 @@ def test_connection_info_scheme_sqlite(config_dir: Path):
     store.save("app", "dev", "local", "sqlite:///tmp/test.db")
     info = store.load("app", "dev", "local")
     assert info.scheme == "sqlite"
+
+
+def test_default_config_dir_is_path():
+    assert isinstance(DEFAULT_CONFIG_DIR, Path)
+    assert "a2db" in str(DEFAULT_CONFIG_DIR)
+    assert "connections" in str(DEFAULT_CONFIG_DIR)

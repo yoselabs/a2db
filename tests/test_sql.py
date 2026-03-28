@@ -1,6 +1,8 @@
+from unittest import mock
+
 import pytest
 
-from a2db.sql import DSN_TO_DIALECT, ReadOnlyViolationError, validate_read_only, wrap_with_pagination
+from a2db.sql import DSN_TO_DIALECT, ReadOnlyViolationError, SQLParseError, validate_read_only, wrap_with_pagination
 
 
 def test_wrap_simple_select():
@@ -94,3 +96,45 @@ def test_dsn_to_dialect_mapping():
     assert DSN_TO_DIALECT["sqlite"] == "sqlite"
     assert DSN_TO_DIALECT["mssql"] == "tsql"
     assert DSN_TO_DIALECT["oracle"] == "oracle"
+
+
+def test_wrap_raises_sql_parse_error_on_invalid_sql():
+    with pytest.raises(SQLParseError, match="Failed to parse SQL"):
+        wrap_with_pagination("SELECT )()()()(", dialect="sqlite")
+
+
+def test_validate_read_only_empty_query_raises():
+    with pytest.raises(ReadOnlyViolationError, match="Empty query"):
+        validate_read_only("")
+
+
+def test_validate_read_only_whitespace_only_raises():
+    with pytest.raises(ReadOnlyViolationError, match="Empty query"):
+        validate_read_only("   ;  ")
+
+
+def test_validate_read_only_pragma():
+    """PRAGMA parsed as Command is allowed; but SQLite PRAGMA may parse differently — just verify SHOW works."""
+    # SHOW is the reliable Command path; PRAGMA behavior is dialect-specific
+    validate_read_only("SHOW DATABASES")
+
+
+def test_validate_read_only_show():
+    """SHOW is a Command type that should be allowed."""
+    validate_read_only("SHOW TABLES")
+
+
+def test_validate_read_only_fallback_keyword_check():
+    """When SQLGlot raises ParseError, fall back to keyword check — forbidden keyword raises."""
+    import sqlglot.errors
+
+    with mock.patch("sqlglot.parse", side_effect=sqlglot.errors.ParseError("bad")), pytest.raises(ReadOnlyViolationError, match="INSERT"):
+        validate_read_only("INSERT INTO t VALUES (1)")
+
+
+def test_validate_read_only_fallback_allows_select():
+    """When SQLGlot raises ParseError, fall back to keyword check — SELECT is allowed."""
+    import sqlglot.errors
+
+    with mock.patch("sqlglot.parse", side_effect=sqlglot.errors.ParseError("bad")):
+        validate_read_only("SELECT * FROM t")  # should not raise

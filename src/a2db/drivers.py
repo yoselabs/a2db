@@ -19,7 +19,6 @@ class DriverInfo:
     scheme: str
     module_name: str
     install_hint: str
-    connect_kwargs_fn: str = "default"
 
 
 # Registry of supported database schemes

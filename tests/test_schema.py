@@ -103,3 +103,53 @@ def test_result_metadata(explorer: SchemaExplorer):
     assert result["object_type"] == "table"
     assert result["detail_level"] == "names"
     assert "count" in result
+
+
+def test_search_columns_summary(explorer: SchemaExplorer):
+    result = explorer.search_objects(
+        connection=_conn_spec(),
+        object_type="column",
+        table="users",
+        detail_level="summary",
+    )
+    col = next(c for c in result["results"] if c["name"] == "id")
+    assert "type" in col
+    assert "nullable" in col
+    assert "pk" in col
+
+
+def test_search_columns_full(explorer: SchemaExplorer):
+    result = explorer.search_objects(
+        connection=_conn_spec(),
+        object_type="column",
+        table="users",
+        detail_level="full",
+    )
+    col = next(c for c in result["results"] if c["name"] == "name")
+    assert "type" in col
+    assert "nullable" in col
+    assert "pk" in col
+
+
+def test_search_columns_no_table_returns_empty(explorer: SchemaExplorer):
+    """When no table is given for column search with SQLite, returns empty list."""
+    result = explorer.search_objects(
+        connection=_conn_spec(),
+        object_type="column",
+        detail_level="names",
+    )
+    assert result["results"] == []
+    assert result["count"] == 0
+
+
+def test_search_columns_with_pattern(explorer: SchemaExplorer):
+    result = explorer.search_objects(
+        connection=_conn_spec(),
+        object_type="column",
+        table="users",
+        pattern="%name%",
+        detail_level="names",
+    )
+    names = [r["name"] for r in result["results"]]
+    assert "name" in names
+    assert "id" not in names
