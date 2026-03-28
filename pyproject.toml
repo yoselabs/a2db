@@ -8,8 +8,8 @@ license = "MIT"
 authors = [{name = "Denis Tomilin"}]
 dependencies = [
     "click>=8,<9",
-    "httpx>=0.28,<1.0",
     "mcp[cli]>=1.9,<2",
+    "sqlglot>=26,<27",
 ]
 
 [project.scripts]
