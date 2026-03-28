@@ -50,6 +50,21 @@ def login(project: str, env: str, db: str, dsn: str) -> None:
 
 
 @cli.command()
+@click.option("-p", "--project", required=True, help="Project name")
+@click.option("-e", "--env", required=True, help="Environment")
+@click.option("-d", "--db", required=True, help="Database name")
+def logout(project: str, env: str, db: str) -> None:
+    """Remove a saved connection."""
+    store = _store()
+    try:
+        store.delete(project, env, db)
+    except FileNotFoundError as exc:
+        click.echo(f"Error: {exc}", err=True)
+        sys.exit(1)
+    click.echo(f"Connection removed: {project}/{env}/{db}")
+
+
+@cli.command()
 @click.option("-p", "--project", default=None, help="Filter by project")
 def connections(project: str | None) -> None:
     """List saved connections."""

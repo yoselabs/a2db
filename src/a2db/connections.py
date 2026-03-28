@@ -60,6 +60,13 @@ class ConnectionStore:
             dsn=data["dsn"],
         )
 
+    def delete(self, project: str, env: str, db: str) -> None:
+        """Delete a connection. Raises FileNotFoundError if missing."""
+        path = self._path(project, env, db)
+        if not path.exists():
+            raise FileNotFoundError(f"Connection not found: {project}/{env}/{db}")
+        path.unlink()
+
     def list_connections(self, project: str | None = None) -> list[ConnectionInfo]:
         """List all saved connections, optionally filtered by project."""
         if not self.config_dir.exists():

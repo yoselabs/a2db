@@ -88,6 +88,19 @@ def test_connection_info_scheme_sqlite(config_dir: Path):
     assert info.scheme == "sqlite"
 
 
+def test_delete_removes_file(config_dir: Path):
+    store = ConnectionStore(config_dir)
+    store.save("app", "dev", "main", "sqlite:///tmp/test.db")
+    store.delete("app", "dev", "main")
+    assert not (config_dir / "app-dev-main.toml").exists()
+
+
+def test_delete_missing_raises(config_dir: Path):
+    store = ConnectionStore(config_dir)
+    with pytest.raises(FileNotFoundError):
+        store.delete("nope", "nope", "nope")
+
+
 def test_default_config_dir_is_path():
     assert isinstance(DEFAULT_CONFIG_DIR, Path)
     assert "a2db" in str(DEFAULT_CONFIG_DIR)

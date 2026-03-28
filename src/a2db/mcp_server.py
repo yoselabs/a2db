@@ -41,6 +41,14 @@ def login(project: str, env: str, db: str, dsn: str) -> str:
 
 
 @server.tool()
+def logout(project: str, env: str, db: str) -> str:
+    """Remove a saved connection."""
+    store = _store()
+    store.delete(project, env, db)
+    return f"Connection removed: {project}/{env}/{db}"
+
+
+@server.tool()
 def list_connections(project: str | None = None) -> str:
     """List saved connections. Returns project/env/db and database type (no secrets)."""
     store = _store()
