@@ -4,9 +4,14 @@ CLI and MCP server for AI agents to query databases. Two frontends (CLI + MCP), 
 
 ## Architecture
 
-- `src/a2db/core.py` — shared database logic (both frontends use this)
-- `src/a2db/cli.py` — Click CLI frontend
-- `src/a2db/mcp_server.py` — MCP server frontend
+- `src/a2db/connections.py` — ConnectionStore: save/load/list connection TOML files
+- `src/a2db/drivers.py` — DriverRegistry: DSN scheme → DBAPI 2.0 driver resolution
+- `src/a2db/sql.py` — SQLGlot wrapping: pagination, read-only validation
+- `src/a2db/executor.py` — QueryExecutor: named batch queries with pagination
+- `src/a2db/schema.py` — SchemaExplorer: progressive schema discovery
+- `src/a2db/formatter.py` — Output formatting: TSV and JSON renderers
+- `src/a2db/cli.py` — Click CLI frontend (thin wrapper)
+- `src/a2db/mcp_server.py` — MCP server frontend (thin wrapper)
 
 ## Dev Commands
 
