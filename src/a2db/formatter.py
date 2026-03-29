@@ -30,16 +30,18 @@ def _truncate_field(value: object) -> str:
 
 
 def _format_tsv(results: dict[str, QueryResult]) -> str:
-    """Format results as TSV with query headers."""
-    parts = []
+    """Format results as JSON envelope with TSV row data."""
+    output = {}
     for name, result in results.items():
-        lines = [f"query: {name}"]
-        lines.append("\t".join(result.columns))
-        lines.extend("\t".join(_truncate_field(v) for v in row) for row in result.rows)
-        truncated_str = "true" if result.truncated else "false"
-        lines.append(f"rows: {result.count}, truncated: {truncated_str}")
-        parts.append("\n".join(lines))
-    return "\n\n".join(parts) + "\n"
+        header = "\t".join(result.columns)
+        rows = "\n".join("\t".join(_truncate_field(v) for v in row) for row in result.rows)
+        data = f"{header}\n{rows}" if rows else header
+        output[name] = {
+            "data": data,
+            "rows": result.count,
+            "truncated": result.truncated,
+        }
+    return json.dumps(output, indent=2)
 
 
 def _format_json(results: dict[str, QueryResult]) -> str:

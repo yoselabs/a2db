@@ -10,26 +10,29 @@ def _make_result(name: str, columns: list[str], rows: list[list], truncated: boo
 def test_format_tsv_single_query():
     result = _make_result("users", ["id", "name"], [[1, "Alice"], [2, "Bob"]])
     output = format_results({"users": result}, fmt="tsv")
-    lines = output.strip().split("\n")
-    assert lines[0] == "query: users"
-    assert lines[1] == "id\tname"
-    assert lines[2] == "1\tAlice"
-    assert lines[3] == "2\tBob"
-    assert lines[4] == "rows: 2, truncated: false"
+    data = json.loads(output)
+    assert "users" in data
+    assert data["users"]["data"] == "id\tname\n1\tAlice\n2\tBob"
+    assert data["users"]["rows"] == 2
+    assert data["users"]["truncated"] is False
 
 
 def test_format_tsv_multiple_queries():
     r1 = _make_result("users", ["id", "name"], [[1, "Alice"]])
     r2 = _make_result("orders", ["id", "total"], [[101, 49.99]])
     output = format_results({"users": r1, "orders": r2}, fmt="tsv")
-    assert "query: users" in output
-    assert "query: orders" in output
+    data = json.loads(output)
+    assert "users" in data
+    assert "orders" in data
+    assert "1\tAlice" in data["users"]["data"]
+    assert "101\t49.99" in data["orders"]["data"]
 
 
 def test_format_tsv_truncated():
     result = _make_result("users", ["id"], [[1]], truncated=True)
     output = format_results({"users": result}, fmt="tsv")
-    assert "truncated: true" in output
+    data = json.loads(output)
+    assert data["users"]["truncated"] is True
 
 
 def test_format_json_single_query():
@@ -55,15 +58,16 @@ def test_format_json_multiple_queries():
 def test_format_tsv_none_value():
     result = _make_result("users", ["id", "name"], [[1, None]])
     output = format_results({"users": result}, fmt="tsv")
-    assert "1\tNULL" in output
+    data = json.loads(output)
+    assert "1\tNULL" in data["users"]["data"]
 
 
 def test_format_tsv_long_field_truncated():
     long_text = "x" * 3000
     result = _make_result("data", ["content"], [[long_text]])
     output = format_results({"data": result}, fmt="tsv")
-    assert "... [truncated]" in output
-    assert len(output) < 3000
+    data = json.loads(output)
+    assert "... [truncated]" in data["data"]["data"]
 
 
 def test_format_json_long_field_truncated():
@@ -85,8 +89,8 @@ def test_format_tsv_numeric_types():
         [[42, 3.14, Decimal("199.99"), datetime(2026, 1, 1, 12, 0, tzinfo=UTC)]],
     )
     output = format_results({"stats": result}, fmt="tsv")
-    lines = output.strip().split("\n")
-    assert "42\t3.14\t199.99\t2026-01-01 12:00:00" in lines[2]
+    data = json.loads(output)
+    assert "42\t3.14\t199.99\t2026-01-01 12:00:00" in data["stats"]["data"]
 
 
 def test_format_json_numeric_types():
