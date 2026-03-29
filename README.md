@@ -7,7 +7,7 @@
     <strong>Give AI agents safe, read-only access to your databases. One call, multiple queries, clean results.</strong>
   </p>
   <p align="center">
-    5 databases &middot; batch queries &middot; SQLGlot read-only &middot; zero config
+    5 databases &middot; batch queries &middot; pre-configured connections &middot; SQLGlot read-only
   </p>
   <p align="center">
     <a href="https://pypi.org/project/a2db/"><img src="https://img.shields.io/pypi/v/a2db" alt="PyPI"></a>
@@ -37,9 +37,10 @@ Agent: "Got it — 847 active users, avg order $42.50"
 
 Most database MCP servers make you run one query at a time, repeat connection details on every call, and return results double-encoded inside JSON strings. a2db fixes all of that:
 
+- **Pre-configured connections** — define databases in `.mcp.json` with `--register`, agent queries immediately
 - **Batch queries** — run multiple named queries in a single tool call
-- **Default connection** — set connection once, use it across all queries
-- **Clean output** — structured JSON envelope with compact TSV data (see [why TSV?](#why-tsv))
+- **Default connection** — set connection once, use it across all queries in a batch
+- **Clean output** — structured JSON envelope with compact TSV data and per-query timing (see [why TSV?](#why-tsv))
 - **Read-only enforced** — SQLGlot AST parsing blocks all write operations
 - **All drivers bundled** — `pip install a2db` and you're done
 - **Secrets stay in env** — `${DB_PASSWORD}` in DSNs, expanded only at connection time
@@ -62,12 +63,18 @@ pip install a2db
 
 ### As an MCP Server (recommended)
 
-**Claude Code:**
+**Claude Code** (with pre-configured connection):
+```bash
+claude mcp add -s user a2db -- a2db-mcp \
+  --register myapp/prod/main 'postgresql://user:${DB_PASSWORD}@host/mydb'
+```
+
+**Claude Code** (minimal — agent calls `login` on demand):
 ```bash
 claude mcp add -s user a2db -- a2db-mcp
 ```
 
-**Claude Desktop / Cursor / any MCP client:**
+**Claude Desktop / Cursor / any MCP client** (`.mcp.json`):
 ```json
 {
   "mcpServers": {
@@ -85,9 +92,18 @@ claude mcp add -s user a2db -- a2db-mcp
 }
 ```
 
-The `--register` flag pre-registers connections at server startup — no `login` step needed, the agent can query immediately. Use multiple `--register` pairs for multiple databases.
+**Multiple databases:**
+```json
+{
+  "args": [
+    "a2db-mcp",
+    "--register", "myapp/prod/main", "postgresql://user:${DB_PASSWORD}@host/maindb",
+    "--register", "myapp/prod/analytics", "postgresql://user:${DB_PASSWORD}@host/analytics"
+  ]
+}
+```
 
-Alternatively, skip `--register` and let the agent call `login` on demand.
+`--register` pre-registers connections at server startup — the agent can query immediately. Passwords use `${ENV_VAR}` syntax and are expanded at connection time, never stored in plaintext.
 
 ### As a CLI
 
@@ -221,6 +237,7 @@ a2db currently runs as a **local stdio MCP server**. It inherits environment var
 | **Write support** | Planned (per-connection) | Config flag | Via tool definition | No | Config flag |
 | **Output** | JSON + TSV data | Structured text | MCP protocol | Table / JSON / CSV | JSON |
 | **Schema discovery** | 3 detail levels | Dedicated tool | Prebuilt tools | Via NL-to-SQL | Dedicated tools |
+| **Pre-configured** | `--register` in MCP config | Config file | YAML config | Env var | Cloud-managed |
 | **Credentials** | `${ENV_VAR}` in DSN | DSN strings | Env vars + GCP IAM | Env var | OAuth 2.1 |
 | **Drivers bundled** | All included | All included | Varies | Built-in | Managed |
 | **CLI** | Yes | No | Yes | Yes | No |
@@ -253,19 +270,24 @@ a2db login -p myapp -e dev -d main 'postgresql://user:pass@localhost/mydb'
 ```dockerfile
 FROM python:3.12-slim
 RUN pip install a2db
-CMD ["a2db-mcp"]
+CMD ["a2db-mcp", "--register", "myapp/prod/main", "postgresql://user:${DB_PASSWORD}@host/mydb"]
 ```
 
 ```bash
 docker run -e DB_PASSWORD=secret -i my-a2db-image
 ```
 
-Secrets are injected as environment variables — never baked into the image.
+Secrets are injected as environment variables at runtime — never baked into the image.
 
 ### CI / Automation
 
 ```bash
 pip install a2db
+
+# Pre-configured — no login needed
+a2db-mcp --register myapp/ci/main "postgresql://ci_user:${CI_DB_PASSWORD}@db-host/mydb"
+
+# Or use CLI directly
 a2db login -p myapp -e ci -d main "postgresql://ci_user:${CI_DB_PASSWORD}@db-host/mydb"
 a2db query -p myapp -e ci -d main "SELECT COUNT(*) FROM migrations"
 ```
