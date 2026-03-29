@@ -161,7 +161,7 @@ async def test_async_pg_connection_fetch_with_rows():
     from a2db.drivers import _AsyncPgConnection
 
     mock_row = MagicMock()
-    mock_row.__iter__ = MagicMock(return_value=iter(["id", "name"]))
+    mock_row.keys.return_value = ["id", "name"]
     mock_row.values.return_value = [1, "Alice"]
 
     mock_asyncpg_conn = MagicMock()

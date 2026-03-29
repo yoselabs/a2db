@@ -113,7 +113,7 @@ class _AsyncPgConnection:
         rows = await self._conn.fetch(sql)
         if not rows:
             return [], []
-        columns = [(key, None) for key in rows[0]]
+        columns = [(key, None) for key in rows[0].keys()]  # noqa: SIM118 — asyncpg Record.__iter__ yields values, not keys
         return [tuple(row.values()) for row in rows], columns
 
     async def close(self) -> None:
