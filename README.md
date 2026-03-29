@@ -11,6 +11,7 @@
   </p>
   <p align="center">
     <a href="https://pypi.org/project/a2db/"><img src="https://img.shields.io/pypi/v/a2db" alt="PyPI"></a>
+    <a href="https://pypi.org/project/a2db/"><img src="https://img.shields.io/pypi/dm/a2db" alt="Downloads"></a>
     <a href="https://www.apache.org/licenses/LICENSE-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License: Apache 2.0"></a>
     <a href="https://python.org"><img src="https://img.shields.io/badge/python-3.12%2B-blue.svg" alt="Python 3.12+"></a>
   </p>
