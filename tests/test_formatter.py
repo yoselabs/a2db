@@ -72,3 +72,36 @@ def test_format_json_long_field_truncated():
     output = format_results({"data": result}, fmt="json")
     data = json.loads(output)
     assert "... [truncated]" in data["data"]["rows"][0]["content"]
+
+
+def test_format_tsv_numeric_types():
+    """Verify TSV formatter handles int, float, and other numeric types without ::text casts."""
+    from datetime import UTC, datetime
+    from decimal import Decimal
+
+    result = _make_result(
+        "stats",
+        ["count", "avg_price", "total", "last_seen"],
+        [[42, 3.14, Decimal("199.99"), datetime(2026, 1, 1, 12, 0, tzinfo=UTC)]],
+    )
+    output = format_results({"stats": result}, fmt="tsv")
+    lines = output.strip().split("\n")
+    assert "42\t3.14\t199.99\t2026-01-01 12:00:00" in lines[2]
+
+
+def test_format_json_numeric_types():
+    """Verify JSON formatter serializes non-standard types via default=str."""
+    from datetime import UTC, datetime
+    from decimal import Decimal
+
+    result = _make_result(
+        "stats",
+        ["count", "total", "ts"],
+        [[42, Decimal("199.99"), datetime(2026, 1, 1, tzinfo=UTC)]],
+    )
+    output = format_results({"stats": result}, fmt="json")
+    data = json.loads(output)
+    row = data["stats"]["rows"][0]
+    assert row["count"] == 42
+    assert row["total"] == "199.99"  # Decimal → str via default=str
+    assert "2026" in row["ts"]

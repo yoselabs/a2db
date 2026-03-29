@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
@@ -63,16 +64,27 @@ def list_connections(project: str | None = None) -> str:
     return "\n".join(lines)
 
 
+def _normalize_queries(queries: dict[str, dict] | list[dict]) -> dict[str, dict]:
+    """Normalize queries to named dict format.
+
+    Accepts both named dict ({"label": {connection, sql}}) and list
+    ([{connection, sql}]) formats. Lists get auto-named q1, q2, etc.
+    """
+    if isinstance(queries, list):
+        return {f"q{i + 1}": q for i, q in enumerate(queries)}
+    return queries
+
+
 @server.tool()
 async def execute(
-    queries: dict[str, dict],
+    queries: dict[str, dict] | list[dict[str, Any]],
     format: str = "tsv",  # noqa: A002
     limit: int = 100,
     offset: int = 0,
 ) -> str:
     """Execute named SQL queries. Each query specifies its connection and SQL.
 
-    Example queries parameter:
+    Example queries parameter (named dict — preferred):
     {
         "active_users": {
             "connection": {"project": "myapp", "env": "prod", "db": "users"},
@@ -80,11 +92,20 @@ async def execute(
         }
     }
 
+    Also accepts a list of queries (auto-named q1, q2, ...):
+    [
+        {
+            "connection": {"project": "myapp", "env": "prod", "db": "users"},
+            "sql": "SELECT id, name FROM users WHERE active = true"
+        }
+    ]
+
     Returns results in TSV (default) or JSON format.
     """
+    normalized = _normalize_queries(queries)
     store = _store()
     executor = QueryExecutor(store)
-    results = await executor.execute(queries, limit=limit, offset=offset)
+    results = await executor.execute(normalized, limit=limit, offset=offset)
     return format_results(results, fmt=format)
 
 
