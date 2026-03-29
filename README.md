@@ -149,12 +149,14 @@ a2db logout -p myapp -e prod -d main
   "active_users": {
     "data": "id\tname\n1\tAlice\n2\tBob\n3\tCharlie",
     "rows": 3,
-    "truncated": false
+    "truncated": false,
+    "time_ms": 12
   },
   "recent_orders": {
     "data": "id\ttotal\n501\t129.00\n500\t49.99",
     "rows": 2,
-    "truncated": false
+    "truncated": false,
+    "time_ms": 8
   }
 }
 ```

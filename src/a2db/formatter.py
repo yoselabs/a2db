@@ -17,6 +17,7 @@ class QueryResult:
     rows: list[list]
     count: int
     truncated: bool
+    time_ms: int = 0
 
 
 def _truncate_field(value: object) -> str:
@@ -40,6 +41,7 @@ def _format_tsv(results: dict[str, QueryResult]) -> dict[str, Any]:
             "data": data,
             "rows": result.count,
             "truncated": result.truncated,
+            "time_ms": result.time_ms,
         }
     return output
 
@@ -61,6 +63,7 @@ def _format_json(results: dict[str, QueryResult]) -> dict[str, Any]:
             "rows": rows_as_dicts,
             "count": result.count,
             "truncated": result.truncated,
+            "time_ms": result.time_ms,
         }
     return output
 

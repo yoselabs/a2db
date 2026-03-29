@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import time
 from difflib import get_close_matches
 from typing import TYPE_CHECKING
 
@@ -120,7 +121,9 @@ class QueryExecutor:
 
             conn = await self.registry.connect(info.resolved_dsn)
             try:
+                t0 = time.monotonic()
                 rows, description = await conn.fetch(exec_sql)
+                elapsed_ms = int((time.monotonic() - t0) * 1000)
                 columns = [desc[0] for desc in description] if description else []
                 if not read_only:
                     await conn.commit()
@@ -141,6 +144,7 @@ class QueryExecutor:
                 rows=[list(row) for row in rows],
                 count=len(rows),
                 truncated=truncated,
+                time_ms=elapsed_ms,
             )
         return results
 

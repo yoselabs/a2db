@@ -114,7 +114,8 @@ def query(project: str, env: str, db: str, fmt: str, limit: int, offset: int, ba
         sys.exit(1)
 
     results = asyncio.run(executor.execute(queries, limit=limit, offset=offset))
-    click.echo(format_results(results, fmt=fmt))
+    output = format_results(results, fmt=fmt)
+    click.echo(json.dumps(output, indent=2, default=str))
 
 
 @cli.command()
