@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+import re
 import tomllib
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -24,6 +26,11 @@ class ConnectionInfo:
     def scheme(self) -> str:
         """Extract the DSN scheme (e.g., 'postgresql', 'sqlite')."""
         return urlparse(self.dsn).scheme.split("+")[0]
+
+    @property
+    def resolved_dsn(self) -> str:
+        """DSN with ${ENV_VAR} references expanded from the environment."""
+        return re.sub(r"\$\{(\w+)\}", lambda m: os.environ.get(m.group(1), m.group(0)), self.dsn)
 
 
 class ConnectionStore:

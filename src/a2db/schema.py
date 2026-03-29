@@ -35,7 +35,7 @@ class SchemaExplorer:
             raise ValueError(f"Unsupported object type: '{object_type}'. Supported: {supported}")
 
         info = self.store.load(connection["project"], connection["env"], connection["db"])
-        conn = await self.registry.connect(info.dsn)
+        conn = await self.registry.connect(info.resolved_dsn)
 
         try:
             if object_type == "table":

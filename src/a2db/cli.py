@@ -37,12 +37,20 @@ def cli(ctx: click.Context) -> None:
 @click.option("-d", "--db", required=True, help="Database name")
 @click.argument("dsn")
 def login(project: str, env: str, db: str, dsn: str) -> None:
-    """Save a database connection."""
-    scheme = ConnectionInfo(project=project, env=env, db=db, dsn=dsn).scheme
+    """Save a database connection. Validates by attempting a real connection."""
+    info = ConnectionInfo(project=project, env=env, db=db, dsn=dsn)
     try:
-        DriverRegistry().resolve(scheme)
+        DriverRegistry().resolve(info.scheme)
     except DriverNotFoundError as exc:
         click.echo(f"Error: {exc}", err=True)
+        sys.exit(1)
+
+    # Validate by connecting
+    try:
+        conn = asyncio.run(DriverRegistry().connect(info.resolved_dsn))
+        asyncio.run(conn.close())
+    except Exception as exc:  # noqa: BLE001
+        click.echo(f"Connection failed: {exc}", err=True)
         sys.exit(1)
 
     store = _store()

@@ -44,7 +44,7 @@ class QueryExecutor:
             # Request limit+1 rows to detect truncation
             wrapped_sql = wrap_with_pagination(sql, limit=limit + 1, offset=offset, dialect=dialect)
 
-            conn = await self.registry.connect(info.dsn)
+            conn = await self.registry.connect(info.resolved_dsn)
             try:
                 rows, description = await conn.fetch(wrapped_sql)
                 columns = [desc[0] for desc in description]

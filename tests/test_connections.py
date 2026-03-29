@@ -101,6 +101,29 @@ def test_delete_missing_raises(config_dir: Path):
         store.delete("nope", "nope", "nope")
 
 
+def test_resolved_dsn_expands_env_vars(config_dir: Path, monkeypatch):
+    monkeypatch.setenv("DB_PASS", "s3cret")
+    store = ConnectionStore(config_dir)
+    store.save("app", "prod", "main", "postgresql://admin:${DB_PASS}@localhost/main")
+    info = store.load("app", "prod", "main")
+    assert info.dsn == "postgresql://admin:${DB_PASS}@localhost/main"
+    assert info.resolved_dsn == "postgresql://admin:s3cret@localhost/main"
+
+
+def test_resolved_dsn_keeps_literal_if_env_missing(config_dir: Path):
+    store = ConnectionStore(config_dir)
+    store.save("app", "prod", "main", "postgresql://admin:${NONEXISTENT_VAR}@localhost/main")
+    info = store.load("app", "prod", "main")
+    assert info.resolved_dsn == "postgresql://admin:${NONEXISTENT_VAR}@localhost/main"
+
+
+def test_resolved_dsn_no_vars(config_dir: Path):
+    store = ConnectionStore(config_dir)
+    store.save("app", "dev", "main", "sqlite:///tmp/test.db")
+    info = store.load("app", "dev", "main")
+    assert info.resolved_dsn == "sqlite:///tmp/test.db"
+
+
 def test_default_config_dir_is_path():
     assert isinstance(DEFAULT_CONFIG_DIR, Path)
     assert "a2db" in str(DEFAULT_CONFIG_DIR)

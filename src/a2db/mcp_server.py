@@ -30,10 +30,14 @@ def _store() -> ConnectionStore:
 
 
 @server.tool()
-def login(project: str, env: str, db: str, dsn: str) -> str:
-    """Save a database connection. The (project, env, db) triple is the unique key."""
-    scheme = ConnectionInfo(project=project, env=env, db=db, dsn=dsn).scheme
-    DriverRegistry().resolve(scheme)
+async def login(project: str, env: str, db: str, dsn: str) -> str:
+    """Save a database connection. Validates by attempting a real connection."""
+    info = ConnectionInfo(project=project, env=env, db=db, dsn=dsn)
+    DriverRegistry().resolve(info.scheme)
+
+    # Validate by connecting
+    conn = await DriverRegistry().connect(info.resolved_dsn)
+    await conn.close()
 
     store = _store()
     path = store.save(project, env, db, dsn)
